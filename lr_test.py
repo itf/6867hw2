@@ -7,7 +7,7 @@ from sklearn import linear_model
 # import your LR training code
 
 # parameters
-name = '1'
+name = '4'
 print('======Training======')
 # load data from csv files
 train = loadtxt('data/data'+name+'_train.csv')
@@ -33,7 +33,7 @@ def grad_func_approx(obj_func, d_step, x):
     return grad
 
 # carry out training
-lam = 0
+lam = 1
 
 def obj_func_ELR(w_t):
     w_0 = w_t[0][0]
@@ -47,7 +47,7 @@ def grad_func_ELR(w_t):
 
 # _, w_opt, _ = grad_desc(obj_func_ELR, grad_func_ELR, np.array([[0, 0, 0]]), 1e-2, 1e-6)
 
-model = linear_model.LogisticRegression(penalty='l2', C = 1e0, intercept_scaling=1e2)
+model = linear_model.LogisticRegression(penalty='l1', C = 0.333, intercept_scaling=1e2)
 model = model.fit(X, Y.T[0])
 
 print("Final Weights: ", np.hstack((model.intercept_, model.coef_[0])))

@@ -2,20 +2,22 @@ from numpy import *
 from plotBoundary import *
 import pylab as pl
 import numpy as np
+from PIL import Image
 from sklearn import linear_model
 import cvxopt
+import time
 
 num_digits = 10
 d = 28
 num_images = 500
-train = 200
-val = 150
-test = 150
+train = 500
+val = 0
+test = 0
 digits = np.empty((num_digits, num_images, d ** 2))
 for i in range(num_digits):
     data = loadtxt("data/mnist_digit_" + str(i) + ".csv")
     for j in range(num_images):
-        digits[i][j] = 2 * np.array(data[j:j+1, :]) / 255 - 1
+        digits[i][j] = 2 * (np.array(data[j:j+1, :])) / 255 - 1
 
 
 """ PART 1 """
@@ -81,12 +83,10 @@ test_class_all = np.hstack((np.repeat(1, 5 * test), np.repeat(-1, 5 * test)))
 
 """ CHOOSE A MODEL """
 
-test="all"
+test="17"
 pegasos = True
 linearSVM = True
 gaussianSVM = True
-
-print test
 
 if test == "all":
     X = train_all
@@ -122,55 +122,56 @@ if test == "49":
 
 model = linear_model.LogisticRegression(penalty='l2', C = 1e0, intercept_scaling=1e2)
 model = model.fit(X, Y)
-#
-# # define the predictLR(x) function, which uses trained parameters
-# def predictLR(x):
-#     return model.predict_proba(np.array([x]))[0][1]
-#
-# print('======Training======')
-#
-# err = 0
-# for i in range(len(X)):
-#     if Y[i] > 0:
-#         if predictLR(X[i]) < 0.5:
-#             err += 1
-#     else:
-#         if predictLR(X[i]) > 0.5:
-#             err += 1
-#
-# print("Training Classification Error Rate: ", err / len(X))
-#
-# print('======Validation======')
-#
-# err = 0
-# for i in range(len(valX)):
-#     if valY[i] > 0:
-#         if predictLR(valX[i]) < 0.5:
-#             err += 1
-#     else:
-#         if predictLR(valX[i]) > 0.5:
-#             err += 1
-#
-# print("Validation Classification Error Rate: ", err / len(valX))
-#
-# print('======Testing======')
-#
-# err = 0
-# for i in range(len(testX)):
-#     if testY[i] > 0:
-#         if predictLR(testX[i]) < 0.5:
-#             err += 1
-#     else:
-#         if predictLR(testX[i]) > 0.5:
-#             err += 1
-#
-# print("Testing Classification Error Rate: ", err / len(testX))
+
+# define the predictLR(x) function, which uses trained parameters
+def predictLR(x):
+    return model.predict_proba(np.array([x]))[0][1]
+
+print('======Training======')
+
+err = 0
+for i in range(len(X)):
+    if Y[i] > 0:
+        if predictLR(X[i]) < 0.5:
+            err += 1
+    else:
+        if predictLR(X[i]) > 0.5:
+            err += 1
+
+print("Training Classification Error Rate: ", err / len(X))
+
+print('======Validation======')
+
+err = 0
+for i in range(len(valX)):
+    if valY[i] > 0:
+        if predictLR(valX[i]) < 0.5:
+            err += 1
+    else:
+        if predictLR(valX[i]) > 0.5:
+            err += 1
+
+print("Validation Classification Error Rate: ", err / len(valX))
+
+print('======Testing======')
+
+err = 0
+for i in range(len(testX)):
+    if testY[i] > 0:
+        if predictLR(testX[i]) < 0.5:
+            im = Image.fromarray(((X[i].reshape((28, 28)) + 1) * 255 / 2))
+            err += 1
+    else:
+        if predictLR(testX[i]) > 0.5:
+            err += 1
+
+print("Testing Classification Error Rate: ", err / len(testX))
 
 """ IVAN YOUR CODE """
 
 ################################33
 if linearSVM:
-    C= 0.01
+    C= 1
     def linearKernel(x1, x2):
         return np.dot(x1, x2)
 
@@ -217,7 +218,7 @@ if linearSVM:
     print('======Training======')
 
     ais, b = getWeights(Y, X, C, linearKernel)
-    print "C = " +str(C) + " for linear SVM"
+    print("C = " +str(C) + " for linear SVM")
 
     def predictSVM(x):
         return classifier(Y, X, linearKernel, ais, b, x)
@@ -257,6 +258,7 @@ if linearSVM:
 """ PART 2 """
 
 if gaussianSVM:
+    start = time.clock()
     print('======Training======')
     C = 0.01
     gamma = 100
@@ -270,19 +272,19 @@ if gaussianSVM:
 
 
     errors = 0.
-    for i in xrange(len(X)):
+    for i in range(len(X)):
         if predictSVM(X[i]) * Y[i] < 0:
             errors += 1
 
-    print "C = " +str(C) + " for gaussian SVM"
-    print "gamma = " +str(gamma) + " for gaussian SVM"
+    print("C = " +str(C) + " for gaussian SVM")
+    print("gamma = " +str(gamma) + " for gaussian SVM")
 
     print("Classification Error for training is " + str(errors / len(X)))
 
     print('======Validation======')
 
     errors = 0.
-    for i in xrange(len(valX)):
+    for i in range(len(valX)):
         if predictSVM(valX[i]) * valY[i] < 0:
             errors += 1
 
@@ -291,11 +293,13 @@ if gaussianSVM:
     print('======Testing======')
 
     errors = 0.
-    for i in xrange(len(testX)):
+    for i in range(len(testX)):
         if predictSVM(testX[i]) * testY[i] < 0:
             errors += 1
 
     print("Classification Error for testing is " + str(errors / len(testX)))
+    end = time.clock()
+    print("TOTAL TIME 2: ", end - start)
 
 #####################
 
@@ -304,9 +308,9 @@ if True:
     epochs = 100
     lmbda = .02
     gamma = 100
-    print "Lambda = " +str(lmbda) + " for gaussian pegasos"
-    print "gamma = " +str(gamma) + " for gaussian pegasos"
-    print "epochs = " + str(epochs) + " for gaussian pegasos"
+    print("Lambda = " +str(lmbda) + " for gaussian pegasos")
+    print("gamma = " +str(gamma) + " for gaussian pegasos")
+    print("epochs = " + str(epochs) + " for gaussian pegasos")
 
     n= len(X[0])
     K = zeros((n,n))
@@ -329,10 +333,10 @@ if True:
         kernelMatrix = computeKernelMatrix(kernel, X)
         t = 0
         n = len(x)
-        ai = matrix([[0.0] for i in xrange(n)])
+        ai = matrix([[0.0] for i in range(n)])
         epoch = 0
         while epoch <  max_epochs:
-            for i in xrange(n):
+            for i in range(n):
                 t = t+1
                 step = 1./(t*l)
                 kernelCol = kernelMatrix[:,i]
@@ -347,11 +351,12 @@ if True:
     alpha = train_gaussianSVM(X, Y, lmbda,  gaussianKernel(gamma), epochs)
 
     print("======Training======")
+    start = time.clock()
     def predict_gaussianSVM(x):
         return classifier(X, gaussianKernel(gamma), alpha, x)
 
     errors = 0.
-    for i in xrange(len(X)):
+    for i in range(len(X)):
         if predict_gaussianSVM(X[i]) * Y[i] < 0:
             errors += 1
 
@@ -360,7 +365,7 @@ if True:
     print('======Validation======')
 
     errors = 0.
-    for i in xrange(len(valX)):
+    for i in range(len(valX)):
         if predict_gaussianSVM(valX[i]) * valY[i] < 0:
             errors += 1
 
@@ -369,8 +374,10 @@ if True:
     print('======Testing======')
 
     errors = 0.
-    for i in xrange(len(testX)):
+    for i in range(len(testX)):
         if predict_gaussianSVM(testX[i]) * testY[i] < 0:
             errors += 1
 
     print("Classification Error for testing is " + str(errors / len(testX)))
+    end = time.clock()
+    print("TOTAL TIME 3: ", end - start)
