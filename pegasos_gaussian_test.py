@@ -12,7 +12,8 @@ Y = train[:,2:3]
 # Carry out training.
 epochs = 1000
 lmbda = .02
-gamma = 2e-2
+#gamma = 2e-2
+epsilon = 10e-5
 
 n= len(X[0])
 K = zeros((n,n))
@@ -50,13 +51,25 @@ def train_gaussianSVM(x, y, l, kernel, max_epochs):
     return ai
 
 
-gamma = 4
+gamma = 2**-2
 alpha = train_gaussianSVM(X, Y, lmbda,  gaussianKernel(gamma), epochs)
+
+supportvectors=0
+for a in alpha:
+    if a> epsilon or a < - epsilon:
+        supportvectors+=1
+
+print "there are " + str(supportvectors)  + " support vectors"
 
 def predict_gaussianSVM(x):
     return classifier(X, gaussianKernel(gamma), alpha, x)
 
+errors = 0.
+for i in xrange(len(X)):
+    if Y[i]*predict_gaussianSVM(X[i])<0:
+        errors+=1
 
+print "" + str(errors / len(X)) + " training error rate"
 
 # Define the predict_gaussianSVM(x) function, which uses trained parameters, alpha
 ### TODO:  define predict_gaussianSVM(x) ###

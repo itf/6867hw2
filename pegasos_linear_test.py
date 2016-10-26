@@ -32,7 +32,7 @@ def pegasos(x, y, l, max_epochs):
     return w0,w
 
 
-w0,w =  pegasos(X,Y,8,100)
+w0,w =  pegasos(X,Y,2**-10,256)
 
 def predict_linearSVM(x):
     return w0 + np.dot(x, w)
